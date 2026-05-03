@@ -38,7 +38,7 @@ export async function createScanner(videoEl, onCodeFound) {
       const code = parseRoomCodeFromText(result.data || result);
       if (code) onCodeFound(code);
     },
-    { highlightScanRegion: true, highlightCodeOutline: true }
+    { highlightScanRegion: false, highlightCodeOutline: false, maxScansPerSecond: 5 }
   );
   return {
     start: () => scanner.start(),
