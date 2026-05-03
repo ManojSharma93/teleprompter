@@ -193,8 +193,31 @@ function initController(user, editor) {
     return `${m}:${String(s).padStart(2, '0')}`;
   }
 
+  function jumpToCharIndex(charIndex) {
+    previewScroller.setScrollToCharIndex(charIndex);
+    els.scrub.value = Math.round(state.position * 1000);
+    pushState();
+  }
+
   function renderBookmarks() {
     els.bookmarkList.innerHTML = '';
+
+    const startChip = document.createElement('div');
+    startChip.className = 'bookmark-chip';
+    startChip.style.borderColor = 'var(--accent)';
+    startChip.title = 'Jump to start of script';
+    const startLabel = document.createElement('span');
+    startLabel.textContent = 'Start';
+    const startIcon = document.createElement('span');
+    startIcon.className = 'bm-time';
+    startIcon.textContent = '0:00';
+    startChip.appendChild(startLabel);
+    startChip.appendChild(startIcon);
+    startChip.addEventListener('click', () => {
+      jumpToCharIndex(0);
+    });
+    els.bookmarkList.appendChild(startChip);
+
     if (!activeId) {
       els.addBookmark.disabled = true;
       return;
@@ -202,14 +225,14 @@ function initController(user, editor) {
     els.addBookmark.disabled = false;
 
     const script = editor.get(activeId);
-    const bookmarks = (script?.bookmarks || []).slice().sort((a, b) => a.position - b.position);
+    const bookmarks = (script?.bookmarks || []).slice().sort((a, b) => (a.charIndex || 0) - (b.charIndex || 0));
     const words = wordCount(state.script);
     const totalSeconds = readTimeSeconds(words, state.speed);
 
     for (const bm of bookmarks) {
       const chip = document.createElement('div');
       chip.className = 'bookmark-chip';
-      const timeAt = Math.round(totalSeconds * bm.position);
+      const timeAt = Math.round(totalSeconds * (bm.position || 0));
 
       const label = document.createElement('span');
       label.textContent = bm.label;
@@ -229,14 +252,18 @@ function initController(user, editor) {
         flashSaving();
       });
 
-      chip.title = 'Click to jump here. Right-click to rename.';
+      chip.title = 'Click to jump to first letter of this line. Right-click to rename.';
       chip.appendChild(label);
       chip.appendChild(time);
       chip.appendChild(xBtn);
       chip.addEventListener('click', () => {
-        state.position = bm.position;
-        els.scrub.value = Math.round(bm.position * 1000);
-        pushState();
+        if (typeof bm.charIndex === 'number') {
+          jumpToCharIndex(bm.charIndex);
+        } else {
+          state.position = bm.position;
+          els.scrub.value = Math.round(bm.position * 1000);
+          pushState();
+        }
       });
       chip.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -256,9 +283,18 @@ function initController(user, editor) {
     if (!activeId) return;
     const script = editor.get(activeId);
     const count = (script?.bookmarks || []).length;
-    const defaultLabel = `Mark ${count + 1}`;
-    const label = prompt('Label for this mark:', defaultLabel) || defaultLabel;
-    editor.addBookmark(activeId, state.position, label.trim());
+    const charIndex = previewScroller.getCurrentCharIndex();
+    const snippet = previewScroller.getLineSnippet(charIndex, 30);
+    const defaultLabel = snippet || `Mark ${count + 1}`;
+    const label = (prompt('Label for this mark:', defaultLabel) || defaultLabel).trim();
+    const bm = editor.addBookmark(activeId, state.position, label);
+    if (bm) {
+      editor.update(activeId, {
+        bookmarks: (editor.get(activeId).bookmarks || []).map((b) =>
+          b.id === bm.id ? { ...b, charIndex } : b
+        ),
+      });
+    }
     renderBookmarks();
     flashSaving();
   });

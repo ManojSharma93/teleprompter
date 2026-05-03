@@ -210,5 +210,77 @@ export function createScroller() {
     state = null;
   }
 
-  return { mount, setState, unmount };
+  function getCurrentCharIndex() {
+    if (!textEl || !textEl.firstChild || !state) return 0;
+    const text = textEl.textContent || '';
+    if (!text) return 0;
+
+    const totalScrollPx = textEl.scrollHeight + viewport.clientHeight;
+    const offset = state.position * totalScrollPx;
+    const targetY = offset - viewport.clientHeight * 0.70;
+    if (targetY <= 0) return 0;
+
+    const range = document.createRange();
+    let lo = 0, hi = text.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      try {
+        range.setStart(textEl.firstChild, mid);
+        range.setEnd(textEl.firstChild, Math.min(mid + 1, text.length));
+        const rect = range.getBoundingClientRect();
+        const textRect = textEl.getBoundingClientRect();
+        const charY = rect.top - textRect.top;
+        if (charY < targetY) lo = mid + 1;
+        else hi = mid;
+      } catch { break; }
+    }
+
+    let snapped = lo;
+    while (snapped > 0 && text[snapped - 1] !== '\n') snapped--;
+    return snapped;
+  }
+
+  function getLineSnippet(charIndex, maxLen = 40) {
+    if (!textEl) return '';
+    const text = textEl.textContent || '';
+    const end = text.indexOf('\n', charIndex);
+    const line = (end === -1 ? text.slice(charIndex) : text.slice(charIndex, end)).trim();
+    return line.length > maxLen ? line.slice(0, maxLen) + '...' : line;
+  }
+
+  function setScrollToCharIndex(charIndex) {
+    if (!textEl || !textEl.firstChild || !state) return;
+    const text = textEl.textContent || '';
+    if (charIndex <= 0) {
+      state.position = 0;
+      updateScrollPosition();
+      return;
+    }
+    if (charIndex >= text.length) {
+      state.position = 1;
+      updateScrollPosition();
+      return;
+    }
+    try {
+      const range = document.createRange();
+      range.setStart(textEl.firstChild, charIndex);
+      range.setEnd(textEl.firstChild, Math.min(charIndex + 1, text.length));
+      const rect = range.getBoundingClientRect();
+      const textRect = textEl.getBoundingClientRect();
+      const charY = rect.top - textRect.top;
+      const offset = charY + viewport.clientHeight * 0.70;
+      const totalScrollPx = textEl.scrollHeight + viewport.clientHeight;
+      state.position = Math.max(0, Math.min(1, offset / totalScrollPx));
+      updateScrollPosition();
+    } catch {}
+  }
+
+  return {
+    mount,
+    setState,
+    unmount,
+    getCurrentCharIndex,
+    getLineSnippet,
+    setScrollToCharIndex,
+  };
 }
