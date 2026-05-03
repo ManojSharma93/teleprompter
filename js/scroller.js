@@ -1,5 +1,13 @@
 const BASE_PX_PER_SECOND = 60;
 
+const THEMES = {
+  dark:           { bg: '#0f1115', fg: '#f5f6f7', accent: '#b3d237', rgb: '15,17,21' },
+  black:          { bg: '#000000', fg: '#ffffff', accent: '#b3d237', rgb: '0,0,0' },
+  sepia:          { bg: '#2c1f10', fg: '#f5e6c8', accent: '#e8b65a', rgb: '44,31,16' },
+  'high-contrast':{ bg: '#000000', fg: '#ffff00', accent: '#ffff00', rgb: '0,0,0' },
+  light:          { bg: '#f5f6f7', fg: '#0f1115', accent: '#3b7a1b', rgb: '245,246,247' },
+};
+
 export function createScroller() {
   let host = null;
   let viewport = null;
@@ -9,6 +17,9 @@ export function createScroller() {
   let state = null;
   let rafHandle = null;
   let lastFrameAt = 0;
+
+  let markerLeft = null;
+  let markerRight = null;
 
   function mount(hostEl) {
     host = hostEl;
@@ -21,8 +32,6 @@ export function createScroller() {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #0f1115;
-      color: #f5f6f7;
     `;
 
     textEl = document.createElement('div');
@@ -42,18 +51,9 @@ export function createScroller() {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(
-        to bottom,
-        rgba(15,17,21,0.85) 0%,
-        rgba(15,17,21,0.55) 12%,
-        rgba(15,17,21,0) 22%,
-        rgba(15,17,21,0) 38%,
-        rgba(15,17,21,0.4) 60%,
-        rgba(15,17,21,0.75) 100%
-      );
     `;
 
-    const markerLeft = document.createElement('div');
+    markerLeft = document.createElement('div');
     markerLeft.style.cssText = `
       position: absolute;
       left: 0;
@@ -62,11 +62,10 @@ export function createScroller() {
       height: 0;
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-      border-left: 14px solid #b3d237;
       opacity: 0.85;
       pointer-events: none;
     `;
-    const markerRight = document.createElement('div');
+    markerRight = document.createElement('div');
     markerRight.style.cssText = `
       position: absolute;
       right: 0;
@@ -75,7 +74,6 @@ export function createScroller() {
       height: 0;
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-      border-right: 14px solid #b3d237;
       opacity: 0.85;
       pointer-events: none;
     `;
@@ -85,6 +83,23 @@ export function createScroller() {
     viewport.appendChild(markerLeft);
     viewport.appendChild(markerRight);
     host.appendChild(viewport);
+  }
+
+  function applyTheme(themeName) {
+    const t = THEMES[themeName] || THEMES.dark;
+    viewport.style.background = t.bg;
+    viewport.style.color = t.fg;
+    eyelineEl.style.background = `linear-gradient(
+      to bottom,
+      rgba(${t.rgb},0.85) 0%,
+      rgba(${t.rgb},0.55) 12%,
+      rgba(${t.rgb},0) 22%,
+      rgba(${t.rgb},0) 38%,
+      rgba(${t.rgb},0.4) 60%,
+      rgba(${t.rgb},0.75) 100%
+    )`;
+    markerLeft.style.borderLeft = `14px solid ${t.accent}`;
+    markerRight.style.borderRight = `14px solid ${t.accent}`;
   }
 
   function setState(next) {
@@ -100,6 +115,8 @@ export function createScroller() {
     const margin = `${next.marginPercent}%`;
     textEl.style.paddingLeft = margin;
     textEl.style.paddingRight = margin;
+
+    applyTheme(next.theme);
 
     viewport.style.transform = next.mirror ? 'scaleX(-1)' : '';
 

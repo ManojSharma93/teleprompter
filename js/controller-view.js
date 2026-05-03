@@ -75,6 +75,12 @@ function initController(user, editor) {
     speedVal: document.getElementById('speed-val'),
     fontSize: document.getElementById('font-size'),
     fontVal: document.getElementById('font-val'),
+    lineHeight: document.getElementById('line-height'),
+    lineVal: document.getElementById('line-val'),
+    margin: document.getElementById('margin'),
+    marginVal: document.getElementById('margin-val'),
+    theme: document.getElementById('theme'),
+    countdownSec: document.getElementById('countdown-sec'),
     mirror: document.getElementById('mirror'),
     readtime: document.getElementById('readtime'),
     restart: document.getElementById('restart'),
@@ -244,6 +250,31 @@ function initController(user, editor) {
     pushState();
   });
 
+  els.lineHeight.addEventListener('input', () => {
+    state.lineHeight = parseFloat(els.lineHeight.value);
+    els.lineVal.textContent = state.lineHeight.toFixed(1);
+    editor.setSettings({ lineHeight: state.lineHeight });
+    pushState();
+  });
+
+  els.margin.addEventListener('input', () => {
+    state.marginPercent = parseInt(els.margin.value, 10);
+    els.marginVal.textContent = `${state.marginPercent}%`;
+    editor.setSettings({ marginPercent: state.marginPercent });
+    pushState();
+  });
+
+  els.theme.addEventListener('change', () => {
+    state.theme = els.theme.value;
+    editor.setSettings({ theme: state.theme });
+    pushState();
+  });
+
+  let countdownSeconds = parseInt(els.countdownSec.value, 10);
+  els.countdownSec.addEventListener('change', () => {
+    countdownSeconds = parseInt(els.countdownSec.value, 10);
+  });
+
   els.mirror.addEventListener('change', () => {
     state.mirror = els.mirror.checked;
     editor.setSettings({ mirror: state.mirror });
@@ -256,26 +287,85 @@ function initController(user, editor) {
     pushState();
   });
 
-  els.playPause.addEventListener('click', () => {
-    if (!state.isPlaying && state.position >= 0.999) {
+  function togglePlayPause() {
+    if (state.isPlaying) {
+      state.isPlaying = false;
+      state.countdown = null;
+      els.playPause.textContent = 'Play';
+      pushState();
+      return;
+    }
+
+    if (state.position >= 0.999) {
       state.position = 0;
       els.scrub.value = 0;
     }
-    state.isPlaying = !state.isPlaying;
-    els.playPause.textContent = state.isPlaying ? 'Pause' : 'Play';
+
+    if (countdownSeconds > 0) {
+      runCountdownThenPlay(countdownSeconds);
+    } else {
+      state.isPlaying = true;
+      state.countdown = null;
+      els.playPause.textContent = 'Pause';
+      pushState();
+    }
+  }
+
+  function runCountdownThenPlay(seconds) {
+    let remaining = seconds;
+    state.isPlaying = false;
+    state.countdown = remaining;
+    els.playPause.textContent = 'Pause';
     pushState();
-  });
+
+    const tick = () => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        state.countdown = null;
+        state.isPlaying = true;
+        pushState();
+      } else {
+        state.countdown = remaining;
+        pushState();
+        setTimeout(tick, 1000);
+      }
+    };
+    setTimeout(tick, 1000);
+  }
+
+  els.playPause.addEventListener('click', togglePlayPause);
 
   els.scrub.addEventListener('input', () => {
     state.position = parseInt(els.scrub.value, 10) / 1000;
     pushState();
   });
 
+  document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      togglePlayPause();
+    } else if (e.key === 'r' || e.key === 'R') {
+      state.position = 0;
+      els.scrub.value = 0;
+      pushState();
+    } else if (e.key === 'f' || e.key === 'F') {
+      try {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      } catch {}
+    }
+  });
+
   setInterval(() => {
     if (!state.isPlaying) return;
     els.scrub.value = Math.round(state.position * 1000);
     updateTimes();
-  }, 200);
+    sync.sendState(state);
+  }, 250);
 
   async function startPairing() {
     const code = randomCode();
@@ -301,6 +391,11 @@ function initController(user, editor) {
   renderScriptList();
   els.fontSize.value = state.fontSize;
   els.fontVal.textContent = `${state.fontSize}px`;
+  els.lineHeight.value = state.lineHeight;
+  els.lineVal.textContent = state.lineHeight.toFixed(1);
+  els.margin.value = state.marginPercent;
+  els.marginVal.textContent = `${state.marginPercent}%`;
+  els.theme.value = state.theme;
   els.mirror.checked = state.mirror;
   pushState();
   startPairing();
