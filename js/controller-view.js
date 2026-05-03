@@ -27,12 +27,11 @@ document.querySelectorAll('.login-btn').forEach((btn) => {
 });
 
 const savedUser = localStorage.getItem(ACTIVE_USER_KEY);
-if (savedUser && ALLOWED_USERS.includes(savedUser)) {
-  bootControllerFor(savedUser);
-} else {
-  loginScreen.style.display = 'flex';
-  controllerShell.style.display = 'none';
-}
+const initialUser = (savedUser && ALLOWED_USERS.includes(savedUser)) ? savedUser : 'manoj';
+if (!savedUser) localStorage.setItem(ACTIVE_USER_KEY, initialUser);
+loginScreen.style.display = 'none';
+controllerShell.style.display = 'none';
+bootControllerFor(initialUser);
 
 let cloudErrorCallback = null;
 
@@ -125,9 +124,11 @@ function initController(user, editor) {
   previewScroller.mount(els.preview);
 
   els.switchUser.addEventListener('click', () => {
-    if (!confirm('Switch user? Your current session will end.')) return;
+    const nextUser = user === 'manoj' ? 'krishna' : 'manoj';
+    const nextLabel = nextUser.charAt(0).toUpperCase() + nextUser.slice(1);
+    if (!confirm(`Switch to ${nextLabel}? Current session will end.`)) return;
     try { sync.disconnect(); } catch {}
-    localStorage.removeItem(ACTIVE_USER_KEY);
+    localStorage.setItem(ACTIVE_USER_KEY, nextUser);
     location.reload();
   });
 
