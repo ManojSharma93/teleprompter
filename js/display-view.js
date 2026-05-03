@@ -22,9 +22,33 @@ const signaling = createSignalingClient(SIGNALING_URL);
 const sync = createSync({ signaling });
 const scroller = createScroller();
 let scanner = null;
+let wakeLock = null;
 
 function show(el) { el.classList.remove('hidden'); }
 function hide(el) { el.classList.add('hidden'); }
+
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (err) {
+    wakeLock = null;
+  }
+}
+
+async function releaseWakeLock() {
+  if (wakeLock) {
+    try { await wakeLock.release(); } catch {}
+    wakeLock = null;
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !wakeLock && !els.readingScreen.classList.contains('hidden')) {
+    acquireWakeLock();
+  }
+});
 
 async function connect(code) {
   els.pairStatus.textContent = 'Connecting...';
@@ -45,6 +69,7 @@ function enterReading() {
     scanner.destroy();
     scanner = null;
   }
+  acquireWakeLock();
 }
 
 sync.onState((state) => scroller.setState(state));
@@ -83,6 +108,7 @@ els.readingScreen.addEventListener('click', () => {
 els.disconnect.addEventListener('click', () => {
   sync.disconnect();
   scroller.unmount();
+  releaseWakeLock();
   hide(els.readingScreen);
   show(els.pairScreen);
   els.pairStatus.textContent = '';
