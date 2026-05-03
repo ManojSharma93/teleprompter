@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Teleprompter — Display</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/display.css" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0f1115" />
+</head>
+<body>
+  <div class="display-shell">
+    <section id="pair-screen" class="pair-screen">
+      <h2>Connect to a session</h2>
+      <p class="muted">Scan the QR shown on your computer, or enter the 6-character code.</p>
+      <video id="qr-video" muted playsinline></video>
+      <button id="start-scan" class="primary">Scan QR code</button>
+      <input id="code-input" class="code-input" placeholder="ABC123" maxlength="6" />
+      <button id="join-by-code">Join</button>
+      <p id="pair-status" class="muted"></p>
+    </section>
+    <section id="reading-screen" class="reading-screen hidden"></section>
+    <div id="overlay" class="overlay hidden">
+      <span id="conn-label">Connected</span>
+      <button id="disconnect">Disconnect</button>
+    </div>
+  </div>
+  <script type="module" src="/js/display-view.js"></script>
+</body>
+</html>
