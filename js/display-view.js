@@ -135,3 +135,21 @@ const params = new URLSearchParams(location.search);
 if (params.get('code')) {
   els.codeInput.value = params.get('code').toUpperCase();
 }
+
+const forceUpdateBtn = document.getElementById('force-update');
+if (forceUpdateBtn) {
+  forceUpdateBtn.addEventListener('click', async () => {
+    forceUpdateBtn.textContent = 'Updating...';
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map((n) => caches.delete(n)));
+      }
+    } catch {}
+    location.reload();
+  });
+}
