@@ -19,7 +19,7 @@ export default defineConfig({
       manifest: {
         name: 'Teleprompter',
         short_name: 'Teleprompter',
-        description: 'Cross-device teleprompter — read on phone or iPad, control from computer',
+        description: 'Cross-device teleprompter: read on phone or iPad, control from computer',
         theme_color: '#0f1115',
         background_color: '#0f1115',
         display: 'standalone',
