@@ -364,7 +364,6 @@ function initController(user, editor) {
     if (!state.isPlaying) return;
     els.scrub.value = Math.round(state.position * 1000);
     updateTimes();
-    sync.sendState(state);
   }, 250);
 
   async function startPairing() {
