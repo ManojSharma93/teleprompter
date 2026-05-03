@@ -65,6 +65,48 @@
   line-height: 1.6;
 }
 
+.script-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 240px;
+  max-width: 480px;
+}
+
+.title-input {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.save-indicator {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  color: var(--fg-muted);
+  transition: opacity 200ms, background 200ms;
+}
+
+.save-indicator.saving { background: #2c4a8b; color: #cfe2ff; }
+.save-indicator.saved  { background: #2c4a2c; color: #b3e0b3; }
+.save-indicator.error  { background: #5b2c2c; color: #f0c4c4; }
+
 .preview-frame {
   flex: 1;
   min-height: 0;

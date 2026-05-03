@@ -45,9 +45,14 @@
     </aside>
 
     <main class="controller-main">
-      <div class="row" style="justify-content:space-between;">
-        <input id="script-name" placeholder="Untitled script" style="max-width:320px;" />
-        <div class="row">
+      <div class="script-toolbar">
+        <div class="title-row">
+          <label for="script-name" class="muted" style="font-size:12px;">Script title</label>
+          <input id="script-name" class="title-input" placeholder="Type a name for this script..." autocomplete="off" />
+        </div>
+        <div class="toolbar-actions">
+          <span id="save-indicator" class="save-indicator">Saved</span>
+          <button id="save-now" class="primary">Save</button>
           <button id="duplicate-script">Duplicate</button>
           <button id="delete-script">Delete</button>
         </div>

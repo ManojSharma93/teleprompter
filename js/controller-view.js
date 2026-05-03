@@ -34,13 +34,18 @@ if (savedUser && ALLOWED_USERS.includes(savedUser)) {
   controllerShell.style.display = 'none';
 }
 
+let cloudErrorCallback = null;
+
 async function bootControllerFor(user) {
   loginStatus.textContent = 'Loading your scripts...';
 
   const editor = createEditor({
     user,
     cloudStorage,
-    onCloudError: (err) => console.warn('Cloud sync error:', err),
+    onCloudError: (err) => {
+      console.warn('Cloud sync error:', err);
+      if (cloudErrorCallback) cloudErrorCallback(err);
+    },
   });
 
   try {
@@ -65,6 +70,8 @@ function initController(user, editor) {
     importFile: document.getElementById('import-file'),
     scriptName: document.getElementById('script-name'),
     scriptContent: document.getElementById('script-content'),
+    saveNow: document.getElementById('save-now'),
+    saveIndicator: document.getElementById('save-indicator'),
     duplicateScript: document.getElementById('duplicate-script'),
     deleteScript: document.getElementById('delete-script'),
     preview: document.getElementById('preview'),
@@ -91,6 +98,25 @@ function initController(user, editor) {
   };
 
   els.currentUser.textContent = user.charAt(0).toUpperCase() + user.slice(1);
+
+  let saveTimer = null;
+  function flashSaving() {
+    els.saveIndicator.textContent = 'Saving...';
+    els.saveIndicator.className = 'save-indicator saving';
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      els.saveIndicator.textContent = 'Saved';
+      els.saveIndicator.className = 'save-indicator saved';
+    }, 700);
+  }
+  function flashError(msg) {
+    if (saveTimer) clearTimeout(saveTimer);
+    els.saveIndicator.textContent = msg || 'Save failed';
+    els.saveIndicator.className = 'save-indicator error';
+  }
+  els.saveIndicator.textContent = 'Saved';
+  els.saveIndicator.className = 'save-indicator saved';
+  cloudErrorCallback = (err) => flashError('Sync failed');
 
   const sync = createSync({ signaling });
   const previewScroller = createScroller();
@@ -182,13 +208,24 @@ function initController(user, editor) {
     loadScript(created.id);
   });
 
-  els.scriptName.addEventListener('input', persistActive);
+  els.scriptName.addEventListener('input', () => {
+    persistActive();
+    flashSaving();
+    renderScriptList();
+  });
   els.scriptContent.addEventListener('input', () => {
     state.script = els.scriptContent.value;
     state.position = 0;
     els.scrub.value = 0;
     pushState();
     persistActive();
+    flashSaving();
+  });
+
+  els.saveNow.addEventListener('click', () => {
+    persistActive();
+    flashSaving();
+    renderScriptList();
   });
 
   els.duplicateScript.addEventListener('click', () => {
