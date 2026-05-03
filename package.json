@@ -1,0 +1,27 @@
+{
+  "name": "teleprompter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "worker:dev": "wrangler dev --config worker/wrangler.toml",
+    "worker:deploy": "wrangler deploy --config worker/wrangler.toml"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0",
+    "jsdom": "^25.0.0",
+    "vite-plugin-pwa": "^0.20.0",
+    "workbox-window": "^7.1.0",
+    "wrangler": "^3.80.0"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "qr-scanner": "^1.4.2"
+  }
+}
