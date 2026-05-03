@@ -10,8 +10,25 @@
   <meta name="theme-color" content="#0f1115" />
 </head>
 <body>
-  <div class="controller-shell">
+  <div id="login-screen" class="login-shell">
+    <div class="login-card">
+      <h1>Teleprompter</h1>
+      <p class="muted">Choose your account to continue. Your scripts sync to the cloud and follow you on any device.</p>
+      <div class="login-buttons">
+        <button class="login-btn" data-user="manoj">I'm Manoj</button>
+        <button class="login-btn" data-user="krishna">I'm Krishna</button>
+      </div>
+      <p id="login-status" class="muted" style="min-height:1.2em;"></p>
+    </div>
+  </div>
+
+  <div class="controller-shell" id="controller-shell" style="display:none;">
     <aside class="controller-sidebar">
+      <div class="row" style="justify-content:space-between; margin-bottom:8px;">
+        <span class="muted">Logged in as <strong id="current-user">-</strong></span>
+        <button id="switch-user" class="ghost" style="font-size:12px; padding:4px 10px;">Switch</button>
+      </div>
+      <hr style="border-color:var(--border); margin:8px 0 16px;" />
       <div class="row" style="justify-content:space-between;">
         <strong>Scripts</strong>
         <button id="new-script" class="ghost">+ New</button>

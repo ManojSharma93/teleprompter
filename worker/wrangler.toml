@@ -6,6 +6,10 @@ compatibility_date = "2026-01-01"
 name = "ROOMS"
 class_name = "Room"
 
+[[kv_namespaces]]
+binding = "USER_STORAGE"
+id = "1f835b016a5e49a98e3ac0ab35044dbf"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Room"]

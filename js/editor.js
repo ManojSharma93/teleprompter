@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'teleprompter:v1';
+const STORAGE_KEY_BASE = 'teleprompter:v1';
 const SCHEMA_VERSION = 1;
 
 const DEFAULT_SETTINGS = {
@@ -18,9 +18,17 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function load() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return { scripts: [], settings: { ...DEFAULT_SETTINGS } };
+function storageKey(user) {
+  return user ? `${STORAGE_KEY_BASE}:user:${user}` : STORAGE_KEY_BASE;
+}
+
+function emptyState() {
+  return { scripts: [], settings: { ...DEFAULT_SETTINGS } };
+}
+
+function load(key) {
+  const raw = localStorage.getItem(key);
+  if (!raw) return emptyState();
   try {
     const parsed = JSON.parse(raw);
     return {
@@ -28,16 +36,40 @@ function load() {
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
     };
   } catch {
-    return { scripts: [], settings: { ...DEFAULT_SETTINGS } };
+    return emptyState();
   }
 }
 
-function save(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function persistLocal(key, state) {
+  localStorage.setItem(key, JSON.stringify(state));
 }
 
-export function createEditor() {
-  const state = load();
+export function createEditor({ user = null, cloudStorage = null, onCloudError = null } = {}) {
+  const key = storageKey(user);
+  const state = load(key);
+
+  let cloudSyncTimer = null;
+  function scheduleCloudSync() {
+    if (!cloudStorage || !user) return;
+    if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(async () => {
+      cloudSyncTimer = null;
+      try {
+        await cloudStorage.save(user, {
+          version: SCHEMA_VERSION,
+          scripts: state.scripts,
+          settings: state.settings,
+        });
+      } catch (err) {
+        if (onCloudError) onCloudError(err);
+      }
+    }, 500);
+  }
+
+  function save() {
+    persistLocal(key, state);
+    scheduleCloudSync();
+  }
 
   return {
     list() {
@@ -57,7 +89,7 @@ export function createEditor() {
       const now = nowIso();
       const script = { id: uuid(), name, content, createdAt: now, updatedAt: now };
       state.scripts.unshift(script);
-      save(state);
+      save();
       return { ...script };
     },
 
@@ -66,13 +98,13 @@ export function createEditor() {
       if (idx === -1) return null;
       const merged = { ...state.scripts[idx], ...partial, id, updatedAt: nowIso() };
       state.scripts[idx] = merged;
-      save(state);
+      save();
       return { ...merged };
     },
 
     delete(id) {
       state.scripts = state.scripts.filter((s) => s.id !== id);
-      save(state);
+      save();
     },
 
     duplicate(id) {
@@ -87,7 +119,7 @@ export function createEditor() {
         updatedAt: now,
       };
       state.scripts.unshift(dupe);
-      save(state);
+      save();
       return { ...dupe };
     },
 
@@ -106,7 +138,7 @@ export function createEditor() {
       }
       state.scripts = parsed.scripts;
       state.settings = { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) };
-      save(state);
+      save();
     },
 
     getSettings() {
@@ -115,7 +147,20 @@ export function createEditor() {
 
     setSettings(partial) {
       state.settings = { ...state.settings, ...partial };
-      save(state);
+      save();
+    },
+
+    async hydrateFromCloud() {
+      if (!cloudStorage || !user) return;
+      try {
+        const cloud = await cloudStorage.load(user);
+        if (!cloud) return;
+        if (Array.isArray(cloud.scripts)) state.scripts = cloud.scripts;
+        if (cloud.settings) state.settings = { ...DEFAULT_SETTINGS, ...cloud.settings };
+        persistLocal(key, state);
+      } catch (err) {
+        if (onCloudError) onCloudError(err);
+      }
     },
   };
 }
