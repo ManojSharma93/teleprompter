@@ -199,6 +199,10 @@ els.restart.addEventListener('click', () => {
 });
 
 els.playPause.addEventListener('click', () => {
+  if (!state.isPlaying && state.position >= 0.999) {
+    state.position = 0;
+    els.scrub.value = 0;
+  }
   state.isPlaying = !state.isPlaying;
   els.playPause.textContent = state.isPlaying ? 'Pause' : 'Play';
   pushState();

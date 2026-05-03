@@ -40,17 +40,50 @@ export function createScroller() {
     eyelineEl.className = 'tp-eyeline';
     eyelineEl.style.cssText = `
       position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(15,17,21,0.85) 0%,
+        rgba(15,17,21,0.55) 12%,
+        rgba(15,17,21,0) 22%,
+        rgba(15,17,21,0) 38%,
+        rgba(15,17,21,0.4) 60%,
+        rgba(15,17,21,0.75) 100%
+      );
+    `;
+
+    const markerLeft = document.createElement('div');
+    markerLeft.style.cssText = `
+      position: absolute;
       left: 0;
+      top: 30%;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 14px solid #b3d237;
+      opacity: 0.85;
+      pointer-events: none;
+    `;
+    const markerRight = document.createElement('div');
+    markerRight.style.cssText = `
+      position: absolute;
       right: 0;
-      top: 25%;
-      height: 2px;
-      background: #b3d237;
-      opacity: 0.7;
+      top: 30%;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 14px solid #b3d237;
+      opacity: 0.85;
       pointer-events: none;
     `;
 
     viewport.appendChild(textEl);
     viewport.appendChild(eyelineEl);
+    viewport.appendChild(markerLeft);
+    viewport.appendChild(markerRight);
     host.appendChild(viewport);
   }
 

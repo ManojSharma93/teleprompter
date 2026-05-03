@@ -60,6 +60,21 @@ async function connect(code) {
   }
 }
 
+async function enterFullscreen() {
+  const el = document.documentElement;
+  try {
+    if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch {}
+}
+
+async function exitFullscreen() {
+  try {
+    if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+    else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+  } catch {}
+}
+
 function enterReading() {
   hide(els.pairScreen);
   show(els.readingScreen);
@@ -70,6 +85,7 @@ function enterReading() {
     scanner = null;
   }
   acquireWakeLock();
+  enterFullscreen();
 }
 
 sync.onState((state) => scroller.setState(state));
@@ -109,6 +125,7 @@ els.disconnect.addEventListener('click', () => {
   sync.disconnect();
   scroller.unmount();
   releaseWakeLock();
+  exitFullscreen();
   hide(els.readingScreen);
   show(els.pairScreen);
   els.pairStatus.textContent = '';
