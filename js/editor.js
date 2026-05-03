@@ -87,10 +87,40 @@ export function createEditor({ user = null, cloudStorage = null, onCloudError = 
 
     create(name, content) {
       const now = nowIso();
-      const script = { id: uuid(), name, content, createdAt: now, updatedAt: now };
+      const script = { id: uuid(), name, content, bookmarks: [], createdAt: now, updatedAt: now };
       state.scripts.unshift(script);
       save();
       return { ...script };
+    },
+
+    addBookmark(scriptId, position, label) {
+      const idx = state.scripts.findIndex((s) => s.id === scriptId);
+      if (idx === -1) return null;
+      const bookmarks = state.scripts[idx].bookmarks || [];
+      const bm = { id: uuid(), position, label: label || `Mark ${bookmarks.length + 1}`, createdAt: nowIso() };
+      bookmarks.push(bm);
+      bookmarks.sort((a, b) => a.position - b.position);
+      state.scripts[idx] = { ...state.scripts[idx], bookmarks, updatedAt: nowIso() };
+      save();
+      return bm;
+    },
+
+    deleteBookmark(scriptId, bookmarkId) {
+      const idx = state.scripts.findIndex((s) => s.id === scriptId);
+      if (idx === -1) return;
+      const bookmarks = (state.scripts[idx].bookmarks || []).filter((b) => b.id !== bookmarkId);
+      state.scripts[idx] = { ...state.scripts[idx], bookmarks, updatedAt: nowIso() };
+      save();
+    },
+
+    renameBookmark(scriptId, bookmarkId, newLabel) {
+      const idx = state.scripts.findIndex((s) => s.id === scriptId);
+      if (idx === -1) return;
+      const bookmarks = (state.scripts[idx].bookmarks || []).map((b) =>
+        b.id === bookmarkId ? { ...b, label: newLabel } : b
+      );
+      state.scripts[idx] = { ...state.scripts[idx], bookmarks, updatedAt: nowIso() };
+      save();
     },
 
     update(id, partial) {

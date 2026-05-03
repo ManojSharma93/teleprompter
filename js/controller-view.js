@@ -72,6 +72,8 @@ function initController(user, editor) {
     scriptContent: document.getElementById('script-content'),
     saveNow: document.getElementById('save-now'),
     saveIndicator: document.getElementById('save-indicator'),
+    addBookmark: document.getElementById('add-bookmark'),
+    bookmarkList: document.getElementById('bookmark-list'),
     duplicateScript: document.getElementById('duplicate-script'),
     deleteScript: document.getElementById('delete-script'),
     preview: document.getElementById('preview'),
@@ -181,6 +183,82 @@ function initController(user, editor) {
     }
   }
 
+  function fmtTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.round(seconds % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function renderBookmarks() {
+    els.bookmarkList.innerHTML = '';
+    if (!activeId) {
+      els.addBookmark.disabled = true;
+      return;
+    }
+    els.addBookmark.disabled = false;
+
+    const script = editor.get(activeId);
+    const bookmarks = (script?.bookmarks || []).slice().sort((a, b) => a.position - b.position);
+    const words = wordCount(state.script);
+    const totalSeconds = readTimeSeconds(words, state.speed);
+
+    for (const bm of bookmarks) {
+      const chip = document.createElement('div');
+      chip.className = 'bookmark-chip';
+      const timeAt = Math.round(totalSeconds * bm.position);
+
+      const label = document.createElement('span');
+      label.textContent = bm.label;
+
+      const time = document.createElement('span');
+      time.className = 'bm-time';
+      time.textContent = fmtTime(timeAt);
+
+      const xBtn = document.createElement('button');
+      xBtn.className = 'bm-x';
+      xBtn.textContent = '×';
+      xBtn.title = 'Delete bookmark';
+      xBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editor.deleteBookmark(activeId, bm.id);
+        renderBookmarks();
+        flashSaving();
+      });
+
+      chip.title = 'Click to jump here. Right-click to rename.';
+      chip.appendChild(label);
+      chip.appendChild(time);
+      chip.appendChild(xBtn);
+      chip.addEventListener('click', () => {
+        state.position = bm.position;
+        els.scrub.value = Math.round(bm.position * 1000);
+        pushState();
+      });
+      chip.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const newLabel = prompt('Rename bookmark:', bm.label);
+        if (newLabel && newLabel.trim()) {
+          editor.renameBookmark(activeId, bm.id, newLabel.trim());
+          renderBookmarks();
+          flashSaving();
+        }
+      });
+
+      els.bookmarkList.appendChild(chip);
+    }
+  }
+
+  els.addBookmark.addEventListener('click', () => {
+    if (!activeId) return;
+    const script = editor.get(activeId);
+    const count = (script?.bookmarks || []).length;
+    const defaultLabel = `Mark ${count + 1}`;
+    const label = prompt('Label for this mark:', defaultLabel) || defaultLabel;
+    editor.addBookmark(activeId, state.position, label.trim());
+    renderBookmarks();
+    flashSaving();
+  });
+
   function loadScript(id) {
     const s = editor.get(id);
     if (!s) return;
@@ -192,6 +270,7 @@ function initController(user, editor) {
     els.scrub.value = 0;
     pushState();
     renderScriptList();
+    renderBookmarks();
   }
 
   function persistActive() {
@@ -333,12 +412,13 @@ function initController(user, editor) {
       return;
     }
 
+    const isFreshStart = state.position < 0.001 || state.position >= 0.999;
     if (state.position >= 0.999) {
       state.position = 0;
       els.scrub.value = 0;
     }
 
-    if (countdownSeconds > 0) {
+    if (isFreshStart && countdownSeconds > 0) {
       runCountdownThenPlay(countdownSeconds);
     } else {
       state.isPlaying = true;
@@ -425,6 +505,7 @@ function initController(user, editor) {
   }
 
   renderScriptList();
+  renderBookmarks();
   els.fontSize.value = state.fontSize;
   els.fontVal.textContent = `${state.fontSize}px`;
   els.lineHeight.value = state.lineHeight;

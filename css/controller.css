@@ -107,6 +107,47 @@
 .save-indicator.saved  { background: #2c4a2c; color: #b3e0b3; }
 .save-indicator.error  { background: #5b2c2c; color: #f0c4c4; }
 
+.bookmark-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.bookmark-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.bookmark-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bookmark-chip:hover { border-color: var(--accent); }
+.bookmark-chip .bm-time { color: var(--fg-muted); font-family: ui-monospace, monospace; font-size: 11px; }
+.bookmark-chip .bm-x {
+  background: transparent;
+  border: 0;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 14px;
+}
+.bookmark-chip .bm-x:hover { color: var(--danger); }
+
 .preview-frame {
   flex: 1;
   min-height: 0;
