@@ -88,6 +88,8 @@ function initController(user, editor) {
     margin: document.getElementById('margin'),
     marginVal: document.getElementById('margin-val'),
     theme: document.getElementById('theme'),
+    dim: document.getElementById('dim'),
+    dimVal: document.getElementById('dim-val'),
     countdownSec: document.getElementById('countdown-sec'),
     mirror: document.getElementById('mirror'),
     readtime: document.getElementById('readtime'),
@@ -147,6 +149,7 @@ function initController(user, editor) {
       marginPercent: s.marginPercent,
       mirror: s.mirror,
       theme: s.theme,
+      dim: typeof s.dim === 'number' ? s.dim : 0.1,
       countdown: null,
     };
   }
@@ -387,6 +390,19 @@ function initController(user, editor) {
     pushState();
   });
 
+  function dimLabel(v) {
+    if (v < 0.2) return 'Bright';
+    if (v < 0.5) return 'Medium';
+    if (v < 0.8) return 'Dim';
+    return 'Cinema';
+  }
+  els.dim.addEventListener('input', () => {
+    state.dim = parseFloat(els.dim.value);
+    els.dimVal.textContent = dimLabel(state.dim);
+    editor.setSettings({ dim: state.dim });
+    pushState();
+  });
+
   let countdownSeconds = parseInt(els.countdownSec.value, 10);
   els.countdownSec.addEventListener('change', () => {
     countdownSeconds = parseInt(els.countdownSec.value, 10);
@@ -514,6 +530,8 @@ function initController(user, editor) {
   els.margin.value = state.marginPercent;
   els.marginVal.textContent = `${state.marginPercent}%`;
   els.theme.value = state.theme;
+  els.dim.value = state.dim;
+  els.dimVal.textContent = dimLabel(state.dim);
   els.mirror.checked = state.mirror;
   pushState();
   startPairing();

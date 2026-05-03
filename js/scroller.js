@@ -1,4 +1,9 @@
-const BASE_PX_PER_SECOND = 60;
+function countWords(text) {
+  if (!text) return 0;
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).length;
+}
 
 const THEMES = {
   dark:           { bg: '#0f1115', fg: '#f5f6f7', accent: '#b3d237', rgb: '15,17,21' },
@@ -85,18 +90,21 @@ export function createScroller() {
     host.appendChild(viewport);
   }
 
-  function applyTheme(themeName) {
+  function applyTheme(themeName, dim = 0.5) {
     const t = THEMES[themeName] || THEMES.dark;
     viewport.style.background = t.bg;
     viewport.style.color = t.fg;
+    const topOpacity = 0.4 + 0.4 * dim;
+    const midDimOpacity = 0.25 + 0.3 * dim;
+    const botOpacity = 0.35 + 0.4 * dim;
     eyelineEl.style.background = `linear-gradient(
       to bottom,
-      rgba(${t.rgb},0.85) 0%,
-      rgba(${t.rgb},0.55) 12%,
+      rgba(${t.rgb},${topOpacity}) 0%,
+      rgba(${t.rgb},${midDimOpacity}) 12%,
       rgba(${t.rgb},0) 22%,
       rgba(${t.rgb},0) 38%,
-      rgba(${t.rgb},0.4) 60%,
-      rgba(${t.rgb},0.75) 100%
+      rgba(${t.rgb},${midDimOpacity}) 60%,
+      rgba(${t.rgb},${botOpacity}) 100%
     )`;
     markerLeft.style.borderLeft = `14px solid ${t.accent}`;
     markerRight.style.borderRight = `14px solid ${t.accent}`;
@@ -116,7 +124,7 @@ export function createScroller() {
     textEl.style.paddingLeft = margin;
     textEl.style.paddingRight = margin;
 
-    applyTheme(next.theme);
+    applyTheme(next.theme, typeof next.dim === 'number' ? next.dim : 0.5);
 
     viewport.style.transform = next.mirror ? 'scaleX(-1)' : '';
 
@@ -167,10 +175,12 @@ export function createScroller() {
     const tick = (now) => {
       const dtSec = (now - lastFrameAt) / 1000;
       lastFrameAt = now;
-      const totalScrollPx = textEl.scrollHeight + viewport.clientHeight;
-      if (totalScrollPx > 0) {
-        const deltaPx = state.speed * BASE_PX_PER_SECOND * dtSec;
-        state.position = Math.min(1, state.position + deltaPx / totalScrollPx);
+      const words = countWords(state.script);
+      const wpm = 150 * (state.speed || 1);
+      const totalSec = words > 0 ? (words / wpm) * 60 : 30;
+      if (totalSec > 0) {
+        const positionDelta = dtSec / totalSec;
+        state.position = Math.min(1, state.position + positionDelta);
       }
       updateScrollPosition();
       if (state.isPlaying && state.position < 1) {
