@@ -24,6 +24,27 @@ html, body { overflow: hidden; }
 
 .reading-screen { position: absolute; inset: 0; }
 
+.reading-screen.needs-fullscreen-tap::after {
+  content: "Tap anywhere to go fullscreen";
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(179, 210, 55, 0.92);
+  color: #0f1115;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 10;
+  animation: fadeOutHint 6s ease forwards;
+}
+
+@keyframes fadeOutHint {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .overlay {
   position: absolute;
   bottom: 16px; left: 50%;

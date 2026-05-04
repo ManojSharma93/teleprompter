@@ -60,12 +60,30 @@ async function connect(code) {
   }
 }
 
-async function enterFullscreen() {
+function enterFullscreen() {
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
   const el = document.documentElement;
   try {
-    if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    if (el.requestFullscreen) {
+      const p = el.requestFullscreen({ navigationUI: 'hide' });
+      if (p && p.catch) p.catch(() => {});
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    }
   } catch {}
+}
+
+function isStandalone() {
+  return (
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function fullscreenSupported() {
+  const el = document.documentElement;
+  return !!(el.requestFullscreen || el.webkitRequestFullscreen);
 }
 
 async function exitFullscreen() {
@@ -74,6 +92,17 @@ async function exitFullscreen() {
     else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
   } catch {}
 }
+
+function showIosHintIfNeeded() {
+  const hint = document.getElementById('ios-hint');
+  if (!hint) return;
+  const ua = navigator.userAgent;
+  const isIPhone = /iPhone|iPod/.test(ua) && !window.MSStream;
+  if (isIPhone && !fullscreenSupported() && !isStandalone()) {
+    hint.classList.remove('hidden');
+  }
+}
+showIosHintIfNeeded();
 
 function enterReading() {
   hide(els.pairScreen);
@@ -86,6 +115,7 @@ function enterReading() {
   }
   acquireWakeLock();
   enterFullscreen();
+  els.readingScreen.classList.add('needs-fullscreen-tap');
 }
 
 sync.onState((state) => scroller.setState(state));
@@ -95,6 +125,7 @@ sync.onStatusChange((s) => {
 
 els.startScan.addEventListener('click', async () => {
   if (scanner) return;
+  enterFullscreen();
   try {
     scanner = await createScanner(els.qrVideo, (code) => connect(code));
     await scanner.start();
@@ -111,10 +142,13 @@ els.joinByCode.addEventListener('click', () => {
     els.pairStatus.textContent = 'Enter a 6-character code.';
     return;
   }
+  enterFullscreen();
   connect(code);
 });
 
 els.readingScreen.addEventListener('click', () => {
+  enterFullscreen();
+  els.readingScreen.classList.remove('needs-fullscreen-tap');
   els.overlay.classList.toggle('hidden');
   if (!els.overlay.classList.contains('hidden')) {
     setTimeout(() => els.overlay.classList.add('hidden'), 3000);

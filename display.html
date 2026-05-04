@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="/css/display.css" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0f1115" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Teleprompter" />
 </head>
 <body>
   <div class="display-shell">
@@ -19,8 +23,11 @@
       <input id="code-input" class="code-input" placeholder="ABC123" maxlength="6" />
       <button id="join-by-code">Join</button>
       <p id="pair-status" class="muted"></p>
+      <p id="ios-hint" class="muted hidden" style="font-size:11px; max-width:320px; line-height:1.4;">
+        <strong>For true fullscreen on iPhone:</strong> tap the Share icon, then "Add to Home Screen", then open Teleprompter from the home-screen icon.
+      </p>
       <button id="force-update" class="ghost" style="font-size:11px; padding:6px 10px; opacity:0.6;">Update to latest version</button>
-      <p class="muted" style="font-size:10px;opacity:0.5;">v1.7</p>
+      <p class="muted" style="font-size:10px;opacity:0.5;">v1.8</p>
     </section>
     <section id="reading-screen" class="reading-screen hidden"></section>
     <div id="overlay" class="overlay hidden">
