@@ -62,7 +62,16 @@
         <div id="bookmark-list" class="bookmark-list"></div>
       </div>
       <textarea id="script-content" class="editor-textarea" placeholder="Paste or type your script here..."></textarea>
-      <div class="preview-frame" id="preview"></div>
+      <p class="muted" style="font-size:11px; margin:0;">Live preview (this device)</p>
+      <div class="preview-frame" id="preview-frame">
+        <div id="preview" style="width:100%; height:100%;"></div>
+        <button id="preview-fullscreen" class="ghost preview-fullscreen-btn">Fullscreen</button>
+        <div class="preview-transport">
+          <button id="preview-restart" class="ghost">Restart</button>
+          <button id="preview-play-pause" class="primary">Play</button>
+          <span id="preview-time" class="muted">0:00 / 0:00</span>
+        </div>
+      </div>
     </main>
 
     <aside class="controller-rightbar">
@@ -109,7 +118,8 @@
         <label class="row" style="gap:8px;"><input id="mirror" type="checkbox" /> Mirror (reflective rig)</label>
         <p class="muted" id="readtime"></p>
         <p class="muted" style="font-size:11px;">
-          <strong>Shortcuts:</strong> Space = play/pause &middot; R = restart &middot; F = fullscreen
+          <strong>Shortcuts:</strong> Space = play/pause &middot; R = restart &middot; F = fullscreen &middot;
+          &uarr;/&darr; = nudge position &middot; Shift+&uarr;/&darr; = speed
         </p>
       </div>
     </aside>

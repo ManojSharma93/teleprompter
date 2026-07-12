@@ -108,6 +108,54 @@ describe('Scroller', () => {
     expect(text.style.transform).toContain('translateY');
   });
 
+  it('display mode starts with text hidden below the fold at position 0', () => {
+    const root = document.getElementById('root');
+    const s = createScroller();
+    s.mount(root);
+    s.setState({
+      script: 'long content '.repeat(100),
+      position: 0, speed: 1, isPlaying: false,
+      fontSize: 64, lineHeight: 1.6, marginPercent: 15,
+      mirror: false, theme: 'dark', countdown: null,
+    });
+    const text = root.querySelector('.tp-text');
+    expect(text.style.top).toBe('100%');
+    expect(text.style.transform).toBe('translateY(0px)');
+  });
+
+  it('preview mode shows text at the top of the viewport at position 0', () => {
+    const root = document.getElementById('root');
+    const s = createScroller({ mode: 'preview' });
+    s.mount(root);
+    s.setState({
+      script: 'long content '.repeat(100),
+      position: 0, speed: 1, isPlaying: false,
+      fontSize: 64, lineHeight: 1.6, marginPercent: 15,
+      mirror: false, theme: 'dark', countdown: null,
+    });
+    const text = root.querySelector('.tp-text');
+    expect(text.style.top).toBe('0px');
+    expect(text.style.transform).toBe('translateY(0px)');
+  });
+
+  it('updates text when the same mutable state object is reused across calls', () => {
+    // Regression test: controller-view.js keeps one mutable state object and
+    // mutates it in place before calling setState with that same reference.
+    const root = document.getElementById('root');
+    const s = createScroller();
+    s.mount(root);
+    const state = {
+      script: '', position: 0, speed: 1, isPlaying: false,
+      fontSize: 64, lineHeight: 1.6, marginPercent: 15,
+      mirror: false, theme: 'dark', countdown: null,
+    };
+    s.setState(state);
+    state.script = 'Alpha line.\nBravo line.';
+    s.setState(state);
+    const text = root.querySelector('.tp-text');
+    expect(text.textContent).toBe('Alpha line.\nBravo line.');
+  });
+
   it('unmount removes the scroller from the host', () => {
     const root = document.getElementById('root');
     const s = createScroller();

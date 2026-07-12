@@ -13,13 +13,15 @@ const THEMES = {
   light:          { bg: '#f5f6f7', fg: '#0f1115', accent: '#3b7a1b', rgb: '245,246,247' },
 };
 
-export function createScroller() {
+export function createScroller(opts = {}) {
+  const mode = opts.mode === 'preview' ? 'preview' : 'display';
   let host = null;
   let viewport = null;
   let textEl = null;
   let eyelineEl = null;
   let countdownEl = null;
   let state = null;
+  let lastScript = null;
   let rafHandle = null;
   let lastFrameAt = 0;
 
@@ -111,11 +113,11 @@ export function createScroller() {
   }
 
   function setState(next) {
-    const prevScript = state?.script;
     state = next;
 
-    if (next.script !== prevScript) {
+    if (next.script !== lastScript) {
       textEl.textContent = next.script;
+      lastScript = next.script;
     }
 
     textEl.style.fontSize = `${next.fontSize}px`;
@@ -164,8 +166,16 @@ export function createScroller() {
   }
 
   function updateScrollPosition() {
+    if (mode === 'preview') {
+      const totalScrollPx = Math.max(0, textEl.scrollHeight - viewport.clientHeight);
+      const offset = state.position * totalScrollPx;
+      textEl.style.top = '0';
+      textEl.style.transform = `translateY(${-offset}px)`;
+      return;
+    }
     const totalScrollPx = textEl.scrollHeight + viewport.clientHeight;
     const offset = state.position * totalScrollPx;
+    textEl.style.top = '100%';
     textEl.style.transform = `translateY(${-offset}px)`;
   }
 
@@ -208,6 +218,7 @@ export function createScroller() {
     eyelineEl = null;
     countdownEl = null;
     state = null;
+    lastScript = null;
   }
 
   function getCurrentCharIndex() {

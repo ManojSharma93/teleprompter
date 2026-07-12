@@ -149,12 +149,49 @@
 .bookmark-chip .bm-x:hover { color: var(--danger); }
 
 .preview-frame {
+  position: relative;
   flex: 1;
   min-height: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
 }
+
+.preview-frame:fullscreen,
+.preview-frame:-webkit-full-screen {
+  border: 0;
+  border-radius: 0;
+}
+
+.preview-fullscreen-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  font-size: 11px;
+  padding: 4px 12px;
+  opacity: 0.75;
+}
+
+.preview-fullscreen-btn:hover { opacity: 1; }
+
+.preview-transport {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(15, 17, 21, 0.72);
+  border-radius: 999px;
+  opacity: 0.85;
+}
+
+.preview-transport:hover { opacity: 1; }
+.preview-transport .muted { color: #cfd2d6; font-size: 12px; font-family: ui-monospace, monospace; }
 
 .scrub {
   flex: 1;

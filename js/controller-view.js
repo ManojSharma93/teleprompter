@@ -7,6 +7,7 @@ import { wordCount, readTimeSeconds } from './estimator.js';
 import { createCloudStorage } from './cloud-storage.js';
 
 const SIGNALING_URL = import.meta.env.VITE_SIGNALING_URL || 'http://localhost:8787';
+const NUDGE_SECONDS = 2;
 const ACTIVE_USER_KEY = 'teleprompter:v1:active-user';
 const ALLOWED_USERS = ['manoj', 'krishna'];
 
@@ -76,6 +77,11 @@ function initController(user, editor) {
     duplicateScript: document.getElementById('duplicate-script'),
     deleteScript: document.getElementById('delete-script'),
     preview: document.getElementById('preview'),
+    previewFrame: document.getElementById('preview-frame'),
+    previewFullscreen: document.getElementById('preview-fullscreen'),
+    previewRestart: document.getElementById('preview-restart'),
+    previewPlayPause: document.getElementById('preview-play-pause'),
+    previewTime: document.getElementById('preview-time'),
     qrImage: document.getElementById('qr-image'),
     pairCode: document.getElementById('pair-code'),
     pairStatus: document.getElementById('pair-status'),
@@ -122,8 +128,32 @@ function initController(user, editor) {
   cloudErrorCallback = (err) => flashError('Sync failed');
 
   const sync = createSync({ signaling });
-  const previewScroller = createScroller();
+  const previewScroller = createScroller({ mode: 'preview' });
   previewScroller.mount(els.preview);
+
+  function isPreviewFullscreen() {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    return fsEl === els.previewFrame;
+  }
+
+  els.previewFullscreen.addEventListener('click', () => {
+    if (isPreviewFullscreen()) {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    } else if (els.previewFrame.requestFullscreen) {
+      els.previewFrame.requestFullscreen();
+    } else if (els.previewFrame.webkitRequestFullscreen) {
+      els.previewFrame.webkitRequestFullscreen();
+    }
+    els.previewFullscreen.blur();
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    els.previewFullscreen.textContent = isPreviewFullscreen() ? 'Exit fullscreen' : 'Fullscreen';
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    els.previewFullscreen.textContent = isPreviewFullscreen() ? 'Exit fullscreen' : 'Fullscreen';
+  });
 
   els.switchUser.addEventListener('click', () => {
     const nextUser = user === 'manoj' ? 'krishna' : 'manoj';
@@ -158,6 +188,7 @@ function initController(user, editor) {
     previewScroller.setState(state);
     sync.sendState(state);
     updateTimes();
+    syncPreviewTransport();
   }
 
   function updateTimes() {
@@ -167,6 +198,11 @@ function initController(user, editor) {
     els.timeElapsed.textContent = fmt(elapsed);
     els.timeTotal.textContent = fmt(total);
     els.readtime.textContent = `${words} words, ~${fmt(total)} at ${state.speed.toFixed(1)}x`;
+    els.previewTime.textContent = `${fmt(elapsed)} / ${fmt(total)}`;
+  }
+
+  function syncPreviewTransport() {
+    els.previewPlayPause.textContent = els.playPause.textContent;
   }
 
   function fmt(s) {
@@ -450,11 +486,13 @@ function initController(user, editor) {
     pushState();
   });
 
-  els.restart.addEventListener('click', () => {
+  function restart() {
     state.position = 0;
     els.scrub.value = 0;
     pushState();
-  });
+  }
+  els.restart.addEventListener('click', restart);
+  els.previewRestart.addEventListener('click', restart);
 
   function togglePlayPause() {
     if (state.isPlaying) {
@@ -504,6 +542,7 @@ function initController(user, editor) {
   }
 
   els.playPause.addEventListener('click', togglePlayPause);
+  els.previewPlayPause.addEventListener('click', togglePlayPause);
 
   els.scrub.addEventListener('input', () => {
     state.position = parseInt(els.scrub.value, 10) / 1000;
@@ -527,6 +566,21 @@ function initController(user, editor) {
           document.exitFullscreen();
         }
       } catch {}
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const dir = e.key === 'ArrowUp' ? -1 : 1;
+      if (e.shiftKey) {
+        state.speed = Math.max(0.3, Math.min(3, Math.round((state.speed + dir * 0.1) * 10) / 10));
+        els.speed.value = state.speed;
+        els.speedVal.textContent = `${state.speed.toFixed(1)}x`;
+      } else {
+        const words = wordCount(state.script);
+        const total = readTimeSeconds(words, state.speed);
+        const delta = total > 0 ? (NUDGE_SECONDS / total) * dir : 0;
+        state.position = Math.max(0, Math.min(1, state.position + delta));
+        els.scrub.value = Math.round(state.position * 1000);
+      }
+      pushState();
     }
   });
 
