@@ -166,8 +166,10 @@ els.disconnect.addEventListener('click', () => {
 });
 
 const params = new URLSearchParams(location.search);
-if (params.get('code')) {
-  els.codeInput.value = params.get('code').toUpperCase();
+const urlCode = params.get('code') ? params.get('code').toUpperCase() : null;
+if (urlCode) {
+  els.codeInput.value = urlCode;
+  connect(urlCode);
 }
 
 const forceUpdateBtn = document.getElementById('force-update');

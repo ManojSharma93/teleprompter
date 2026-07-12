@@ -205,7 +205,7 @@
   text-align: center;
 }
 
-.pair-card img { width: 100%; max-width: 220px; }
+.pair-card img { width: 100%; max-width: 260px; }
 .pair-code { font-family: ui-monospace, monospace; font-size: 24px; letter-spacing: 4px; }
 .pair-status { font-size: 13px; color: var(--fg-muted); margin-top: 6px; }
 

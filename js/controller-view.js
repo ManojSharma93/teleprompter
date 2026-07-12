@@ -85,6 +85,7 @@ function initController(user, editor) {
     qrImage: document.getElementById('qr-image'),
     pairCode: document.getElementById('pair-code'),
     pairStatus: document.getElementById('pair-status'),
+    newPairCode: document.getElementById('new-pair-code'),
     speed: document.getElementById('speed'),
     speedVal: document.getElementById('speed-val'),
     fontSize: document.getElementById('font-size'),
@@ -590,8 +591,18 @@ function initController(user, editor) {
     updateTimes();
   }, 250);
 
-  async function startPairing() {
-    const code = randomCode();
+  const PAIR_CODE_KEY = `teleprompter:v1:paircode:${user}`;
+
+  function getOrCreatePairCode() {
+    let code = localStorage.getItem(PAIR_CODE_KEY);
+    if (!code) {
+      code = randomCode();
+      localStorage.setItem(PAIR_CODE_KEY, code);
+    }
+    return code;
+  }
+
+  async function startPairing(code) {
     els.pairCode.textContent = code;
     const url = `${location.origin}/display.html?code=${code}`;
     els.qrImage.src = await generateQrDataUrl(url);
@@ -603,6 +614,13 @@ function initController(user, editor) {
       els.pairStatus.textContent = `Pairing failed: ${err.message}`;
     }
   }
+
+  els.newPairCode.addEventListener('click', () => {
+    const code = randomCode();
+    localStorage.setItem(PAIR_CODE_KEY, code);
+    try { sync.disconnect(); } catch {}
+    startPairing(code);
+  });
 
   function randomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -624,5 +642,5 @@ function initController(user, editor) {
   els.dimVal.textContent = dimLabel(state.dim);
   els.mirror.checked = state.mirror;
   pushState();
-  startPairing();
+  startPairing(getOrCreatePairCode());
 }

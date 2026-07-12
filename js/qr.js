@@ -4,8 +4,9 @@ const CODE_PATTERN = /^[A-Z0-9]{6}$/;
 
 export async function generateQrDataUrl(text) {
   return QRCode.toDataURL(text, {
-    width: 320,
-    margin: 1,
+    width: 400,
+    margin: 2,
+    errorCorrectionLevel: 'H',
     color: { dark: '#0f1115', light: '#ffffff' },
   });
 }
