@@ -131,7 +131,8 @@ els.startScan.addEventListener('click', async () => {
     await scanner.start();
     els.pairStatus.textContent = 'Point camera at the QR on your computer.';
   } catch (err) {
-    els.pairStatus.textContent = 'Camera not available. Use the code input instead.';
+    const reason = err && err.name ? err.name : (err && err.message) || 'unknown error';
+    els.pairStatus.textContent = `Camera not available (${reason}). Use the code input instead.`;
   }
 });
 
