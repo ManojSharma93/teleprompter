@@ -1,10 +1,26 @@
 const THROTTLE_MS = 30;
-const POLL_DEFAULT_MS = 500;
+const POLL_DEFAULT_MS = 200;
 
 export function createSync({
   signaling,
   newPeer = () => new RTCPeerConnection({
-    iceServers: [{ urls: 'stun:stun.cloudflare.com:3478' }],
+    iceServers: [
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      { urls: 'stun:stun.l.google.com:19302' },
+      // Public free-tier TURN relay (OpenRelay project) — used as a fallback
+      // when STUN alone can't traverse NAT (e.g. phone on mobile data).
+      // Shared/rate-limited; swap for a private TURN key if pairing gets flaky.
+      {
+        urls: [
+          'turn:openrelay.metered.ca:80',
+          'turn:openrelay.metered.ca:443',
+          'turn:openrelay.metered.ca:443?transport=tcp',
+        ],
+        username: 'openrelayproject',
+        credential: 'openrelayproject',
+      },
+    ],
+    iceCandidatePoolSize: 4,
   }),
   pollIntervalMs = POLL_DEFAULT_MS,
 } = {}) {
