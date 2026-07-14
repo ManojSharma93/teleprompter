@@ -17,6 +17,7 @@ function getSignalingUrl() {
 }
 
 const SIGNALING_URL = import.meta.env.VITE_SIGNALING_URL || getSignalingUrl();
+console.log('Using SIGNALING_URL:', SIGNALING_URL, 'hostname:', location.hostname);
 const NUDGE_SECONDS = 2;
 const ACTIVE_USER_KEY = 'teleprompter:v1:active-user';
 const ALLOWED_USERS = ['manoj', 'krishna'];
