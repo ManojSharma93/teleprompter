@@ -6,18 +6,13 @@ import { generateQrDataUrl } from './qr.js';
 import { wordCount, readTimeSeconds } from './estimator.js';
 import { createCloudStorage } from './cloud-storage.js';
 
-// Determine signaling URL: use env var if set, otherwise use production URL for deployed sites
-function getSignalingUrl() {
-  // For development/localhost
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    return 'http://localhost:8787';
-  }
-  // For deployed sites (Cloudflare Pages, etc)
-  return 'https://teleprompter-signaling.manojkumarsharma83.workers.dev';
-}
+// Always use the production Workers URL
+// For local development, explicitly point to localhost
+const SIGNALING_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:8787'
+  : 'https://teleprompter-signaling.manojkumarsharma83.workers.dev';
 
-const SIGNALING_URL = import.meta.env.VITE_SIGNALING_URL || getSignalingUrl();
-console.log('Using SIGNALING_URL:', SIGNALING_URL, 'hostname:', location.hostname);
+console.log('[Teleprompter] Using backend URL:', SIGNALING_URL);
 const NUDGE_SECONDS = 2;
 const ACTIVE_USER_KEY = 'teleprompter:v1:active-user';
 const ALLOWED_USERS = ['manoj', 'krishna'];
