@@ -1,5 +1,6 @@
 {
   "name": "teleprompter-85w",
   "pages_build_caching": false,
-  "pages_build_output_dir": "dist"
+  "pages_build_output_dir": "dist",
+  "pages_build_command": "npm run build"
 }
